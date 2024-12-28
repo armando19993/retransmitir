@@ -1,152 +1,113 @@
-// broadcast.js
-const ffmpeg = require("fluent-ffmpeg");
-const puppeteer = require('puppeteer');
-const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
 
-class BroadcastManager {
-  constructor() {
-    this.ffmpegProcesses = new Map(); // Almacena los procesos por nombre de canal
-    this.refreshIntervals = new Map(); // Almacena los intervalos de actualización
-    this.proxy = {
-      protocol: 'http',
-      host: 'geo.iproyal.com',
-      port: 12321,
-      auth: {
-        username: '8f5rPXvqWW6AIar4',
-        password: 'zLB6CCfYyc9BEii2_country-cr'
-      }
-    };
-  }
+// Almacena los procesos de FFmpeg activos
+const ffmpegProcesses = {};
 
-  async getHlsUrl(channel) {
-    // Implementar lógica específica por canal para obtener URL
-    if (channel.requiresAuth) {
-      return await this._getTDMaxUrl(channel);
+const broadcastManager = {
+  // Inicia la transmisión para un canal
+  startBroadcast: async function(channel) {
+    if (ffmpegProcesses[channel.name]?.process) {
+      console.log(`Ya existe una transmisión activa para ${channel.name}`);
+      return;
     }
-    return channel.hlsUrl;
-  }
 
-  async _getTDMaxUrl(channel) {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        `--proxy-server=http://${this.proxy.host}:${this.proxy.port}`
-      ]
-    });
+    console.log(`Iniciando transmisión para ${channel.name}`);
+    console.log(`HLS URL: ${channel.hlsUrl}`);
+    console.log(`RTMP URL: ${channel.rtmpUrl}`);
 
     try {
-      const page = await browser.newPage();
-      await page.authenticate(this.proxy.auth);
+      const process = ffmpeg()
+        .input(channel.hlsUrl)
+        .inputOptions([
+          '-re',                // Lee input a velocidad nativa
+          '-reconnect 1',       // Intenta reconectar si pierde conexión
+          '-reconnect_at_eof 1',
+          '-reconnect_streamed 1',
+          '-reconnect_delay_max 2',
+          '-fflags +genpts'     // Genera timestamps
+        ])
+        .outputOptions([
+          '-c:v copy',          // Copia el video sin recodificar
+          '-c:a aac',           // Codec de audio
+          '-b:a 128k',          // Bitrate de audio
+          '-f flv'              // Formato de salida
+        ])
+        .output(channel.rtmpUrl);
+
+      // Manejadores de eventos
+      process
+        .on('start', () => {
+          console.log(`Transmisión iniciada para ${channel.name}`);
+          ffmpegProcesses[channel.name] = { 
+            process,
+            status: 'running',
+            startTime: new Date()
+          };
+        })
+        .on('error', (err) => {
+          console.error(`Error en la transmisión de ${channel.name}:`, err.message);
+          ffmpegProcesses[channel.name] = { 
+            process: null, 
+            status: 'error',
+            lastError: err.message
+          };
+        })
+        .on('end', () => {
+          console.log(`Transmisión finalizada para ${channel.name}`);
+          ffmpegProcesses[channel.name] = { 
+            process: null, 
+            status: 'stopped',
+            endTime: new Date()
+          };
+        });
+
+      // Inicia la transmisión
+      process.run();
       
-      // Login process
-      await page.goto('https://www.tdmax.com/login', { waitUntil: 'networkidle2' });
-      await page.waitForSelector('input#auto-login-emailLabel', {visible: true});
-      await page.type('input#auto-login-emailLabel', channel.authEmail);
-      await page.waitForSelector('input#auto_password', {visible: true});
-      await page.type('input#auto_password', channel.authPassword);
-      await page.click('#auto-login-button');
-      await page.waitForNavigation({ waitUntil: 'networkidle2' });
-
-      // Get stream URL
-      await page.goto(channel.streamPageUrl, { waitUntil: 'networkidle2' });
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      await page.select('select#showFirstLast', 'last');
-      const link = await page.$eval('a#m3u8Link', element => element.textContent.trim());
-      
-      return link;
-    } finally {
-      await browser.close();
-    }
-  }
-
-  startBroadcast(channel) {
-    console.log(`Iniciando transmisión para canal: ${channel.name}`);
-    
-    const process = ffmpeg()
-      .input(channel.hlsUrl)
-      .inputOptions(["-fflags +genpts", "-re"])
-      .outputOptions([
-        "-c:v libx264",
-        "-preset medium",
-        "-tune zerolatency",
-        "-c:a aac",
-        "-b:a 128k",
-        "-b:v 1500k",
-        "-maxrate 2000k",
-        "-bufsize 6000k",
-        "-f flv",
-      ])
-      .output(channel.rtmpUrl)
-      .on("start", () => {
-        console.log(`Transmisión iniciada para ${channel.name}`);
-      })
-      .on("error", async (err) => {
-        console.error(`Error en transmisión de ${channel.name}:`, err.message);
-        await this.restartBroadcast(channel);
-      })
-      .on("end", async () => {
-        console.log(`Transmisión finalizada para ${channel.name}`);
-        await this.restartBroadcast(channel);
-      });
-
-    this.ffmpegProcesses.set(channel.name, process.run());
-
-    // Configurar actualización periódica de URL si es necesario
-    if (channel.requiresAuth) {
-      this.refreshIntervals.set(channel.name, setInterval(async () => {
-        await this.updateChannelUrl(channel);
-      }, channel.refreshInterval || 3600000));
-    }
-  }
-
-  async stopBroadcast(channel) {
-    const process = this.ffmpegProcesses.get(channel.name);
-    if (process) {
-      return new Promise((resolve) => {
-        try {
-          process.kill('SIGTERM');
-          setTimeout(() => {
-            if (this.ffmpegProcesses.has(channel.name)) {
-              process.kill('SIGKILL');
-              this.ffmpegProcesses.delete(channel.name);
-            }
-            resolve();
-          }, 5000);
-        } catch (error) {
-          console.error(`Error al detener ${channel.name}:`, error);
-          this.ffmpegProcesses.delete(channel.name);
-          resolve();
-        }
-      });
-    }
-  }
-
-  async restartBroadcast(channel) {
-    await this.stopBroadcast(channel);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Actualizar URL si es necesario
-    if (channel.requiresAuth) {
-      const newUrl = await this.getHlsUrl(channel);
-      channel.hlsUrl = newUrl;
-    }
-    
-    this.startBroadcast(channel);
-  }
-
-  async updateChannelUrl(channel) {
-    try {
-      const newUrl = await this.getHlsUrl(channel);
-      if (newUrl !== channel.hlsUrl) {
-        channel.hlsUrl = newUrl;
-        await this.restartBroadcast(channel);
-      }
+      return true;
     } catch (error) {
-      console.error(`Error actualizando URL para ${channel.name}:`, error);
+      console.error(`Error al iniciar la transmisión de ${channel.name}:`, error);
+      ffmpegProcesses[channel.name] = { 
+        process: null, 
+        status: 'error',
+        lastError: error.message
+      };
+      throw error;
     }
-  }
-}
+  },
 
-module.exports = new BroadcastManager();
+  // Detiene la transmisión de un canal
+  stopBroadcast: async function(channel) {
+    return new Promise((resolve) => {
+      const channelProcess = ffmpegProcesses[channel.name];
+      if (channelProcess?.process) {
+        console.log(`Deteniendo transmisión para ${channel.name}`);
+        channelProcess.process.kill('SIGTERM');
+        ffmpegProcesses[channel.name] = { 
+          process: null, 
+          status: 'stopped',
+          endTime: new Date()
+        };
+        resolve(true);
+      } else {
+        console.log(`No hay transmisión activa para ${channel.name}`);
+        resolve(false);
+      }
+    });
+  },
+
+  // Obtiene el estado de un canal
+  getStatus: function(channelName) {
+    return ffmpegProcesses[channelName] || { 
+      process: null, 
+      status: 'stopped' 
+    };
+  },
+
+  // Obtiene el estado de todos los canales
+  getAllStatus: function() {
+    return ffmpegProcesses;
+  }
+};
+
+module.exports = broadcastManager;

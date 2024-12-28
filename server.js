@@ -32,54 +32,6 @@ function saveChannels(channels) {
   });
 }
 
-// Función para iniciar transmisión
-function startBroadcast(channelName, hlsUrl, rtmpUrl) {
-  console.log(`Iniciando retransmisión para ${channelName} desde: ${hlsUrl}`);
-
-  const process = ffmpeg()
-    .input(hlsUrl)
-    .inputOptions(["-fflags +genpts", "-re"])
-    .outputOptions([
-      "-c:v libx264",
-      "-preset medium",
-      "-tune zerolatency",
-      "-c:a aac",
-      "-b:a 128k",
-      "-b:v 1500k",
-      "-maxrate 2000k",
-      "-bufsize 6000k",
-      "-f flv",
-    ])
-    .output(rtmpUrl)
-    .on("start", () => {
-      console.log(`Transmisión iniciada para ${channelName}`);
-      ffmpegProcesses[channelName] = { process, status: "running" };
-    })
-    .on("error", (err) => {
-      console.error(`Error en la transmisión de ${channelName}:`, err.message);
-      ffmpegProcesses[channelName] = { process: null, status: "error" };
-    })
-    .on("end", () => {
-      console.log(`Transmisión finalizada para ${channelName}`);
-      ffmpegProcesses[channelName] = { process: null, status: "stopped" };
-    })
-    .run();
-}
-
-// Función para detener transmisión
-function stopBroadcast(channelName) {
-  return new Promise((resolve) => {
-    const channelProcess = ffmpegProcesses[channelName];
-    if (channelProcess && channelProcess.process) {
-      console.log(`Deteniendo transmisión para ${channelName}`);
-      channelProcess.process.kill("SIGTERM");
-      ffmpegProcesses[channelName] = { process: null, status: "stopped" };
-      resolve(true);
-    } else {
-      resolve(false);
-    }
-  });
-}
 
 // Ruta principal
 app.get("/", (req, res) => {
@@ -126,9 +78,6 @@ app.post("/channels/start", async (req, res) => {
     const channel = channels.find((c) => c.name === name);
 
     if (channel) {
-      // Agregar configuración adicional si es necesaria
-      channel.requiresAuth = channel.requiresAuth || false;
-      channel.refreshInterval = channel.refreshInterval || 3600000;
       
       await broadcastManager.startBroadcast(channel);
       res.redirect("/channels");
