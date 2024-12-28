@@ -219,19 +219,19 @@
                 <button type="submit" class="icon-btn">
                   <i class="fas fa-save"></i> Guardar Cambios
                 </button>
-                <form action="/channels/start" method="POST" style="display: inline;">
-                  <input type="hidden" name="name" value="<%= channel.name %>">
-                  <button type="submit" <%= channel.status === 'running' ? 'disabled' : '' %>>
-                    <i class="fas fa-play"></i> Iniciar
-                  </button>
-                </form>
-                <form action="/channels/stop" method="POST" style="display: inline;">
-                  <input type="hidden" name="name" value="<%= channel.name %>">
-                  <button type="submit" class="delete" <%= channel.status === 'stopped' ? 'disabled' : '' %>>
-                    <i class="fas fa-stop"></i> Detener
-                  </button>
-                </form>
               </div>
+            </form>
+            <form action="/channels/start" method="POST" style="display: inline;">
+              <input type="hidden" name="name" value="<%= channel.name %>">
+              <button type="submit" <%= channel.status === 'running' ? 'disabled' : '' %>>
+                <i class="fas fa-play"></i> Iniciar
+              </button>
+            </form>
+            <form action="/channels/stop" method="POST" style="display: inline;">
+              <input type="hidden" name="name" value="<%= channel.name %>">
+              <button type="submit" class="delete" <%= channel.status === 'stopped' ? 'disabled' : '' %>>
+                <i class="fas fa-stop"></i> Detener
+              </button>
             </form>
           </li>
         <% }) %>
