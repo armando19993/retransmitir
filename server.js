@@ -168,6 +168,33 @@ app.post("/channels/delete", async (req, res) => {
   }
 });
 
+
+app.post("/channels/edit", (req, res) => {
+  const { index, name, hlsUrl, rtmpUrl } = req.body;
+
+  fs.readFile(channelsFile, "utf-8", (err, data) => {
+    if (err) {
+      return res.status(500).send("Error al leer el archivo de canales.");
+    }
+
+    const channels = JSON.parse(data);
+
+    if (index >= 0 && index < channels.length) {
+      channels[index] = { name, hlsUrl, rtmpUrl };
+    } else {
+      return res.status(400).send("Índice de canal no válido.");
+    }
+
+    fs.writeFile(channelsFile, JSON.stringify(channels, null, 2), (err) => {
+      if (err) {
+        return res.status(500).send("Error al guardar el canal editado.");
+      }
+      res.redirect("/channels");
+    });
+  });
+});
+
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
