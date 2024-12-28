@@ -60,7 +60,7 @@ app.post("/channels/add", async (req, res) => {
   try {
     const data = await fs.promises.readFile(channelsFile, "utf-8");
     const channels = JSON.parse(data);
-    channels.push({ name, hlsUrl, rtmpUrl });
+    channels.push({ name, hlsUrl, rtmpUrl, lastUpdated: new Date().toISOString() });
     await saveChannels(channels);
     res.redirect("/channels");
   } catch (err) {
@@ -147,7 +147,13 @@ app.post("/channels/edit", (req, res) => {
     const channels = JSON.parse(data);
 
     if (index >= 0 && index < channels.length) {
-      channels[index] = { name, hlsUrl, rtmpUrl };
+      // Actualizar el canal con la nueva información y la fecha de actualización
+      channels[index] = {
+        name,
+        hlsUrl,
+        rtmpUrl,
+        lastUpdated: new Date().toISOString() // Fecha de la última actualización
+      };
     } else {
       return res.status(400).send("Índice de canal no válido.");
     }
