@@ -129,9 +129,11 @@ app.post("/channels/delete", async (req, res) => {
     await saveChannels(updatedChannels); // Guardar los cambios en el archivo
     res.redirect("/channels");
   } catch (err) {
-    res.status(500).send("Error al eliminar el canal.");
+    console.error("Error al eliminar el canal:", err); // Log de detalle
+    res.status(500).send("Error al eliminar el canal: " + err.message); // Mensaje más detallado
   }
 });
+
 
 
 app.post("/channels/edit", (req, res) => {
