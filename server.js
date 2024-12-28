@@ -5,6 +5,7 @@ const path = require("path");
 const ffmpeg = require("fluent-ffmpeg");
 const app = express();
 const PORT = 3000;
+const broadcastManager = require('./broadcast');
 
 // Rutas de los archivos
 const channelsFile = path.join(__dirname, "channels.json");
@@ -125,7 +126,11 @@ app.post("/channels/start", async (req, res) => {
     const channel = channels.find((c) => c.name === name);
 
     if (channel) {
-      startBroadcast(channel.name, channel.hlsUrl, channel.rtmpUrl);
+      // Agregar configuración adicional si es necesaria
+      channel.requiresAuth = channel.requiresAuth || false;
+      channel.refreshInterval = channel.refreshInterval || 3600000;
+      
+      await broadcastManager.startBroadcast(channel);
       res.redirect("/channels");
     } else {
       res.status(404).send("Canal no encontrado.");
@@ -140,11 +145,15 @@ app.post("/channels/stop", async (req, res) => {
   const { name } = req.body;
 
   try {
-    const stopped = await stopBroadcast(name);
-    if (stopped) {
+    const data = await fs.promises.readFile(channelsFile, "utf-8");
+    const channels = JSON.parse(data);
+    const channel = channels.find((c) => c.name === name);
+
+    if (channel) {
+      await broadcastManager.stopBroadcast(channel);
       res.redirect("/channels");
     } else {
-      res.status(404).send("No se está transmitiendo ese canal.");
+      res.status(404).send("Canal no encontrado.");
     }
   } catch (err) {
     res.status(500).send("Error al detener la transmisión.");
