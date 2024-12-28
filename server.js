@@ -125,7 +125,7 @@ app.post("/channels/delete", async (req, res) => {
       return res.status(404).send("Canal no encontrado.");
     }
 
-    await stopBroadcast(name); // Detener transmisión si está activa
+    await broadcastManager.stopBroadcast(channel);
     await saveChannels(updatedChannels); // Guardar los cambios en el archivo
     res.redirect("/channels");
   } catch (err) {
