@@ -116,10 +116,17 @@ app.post("/channels/delete", async (req, res) => {
   try {
     const data = await fs.promises.readFile(channelsFile, "utf-8");
     const channels = JSON.parse(data);
+
+    // Filtra el canal que corresponde al `name`
     const updatedChannels = channels.filter((c) => c.name !== name);
 
+    if (channels.length === updatedChannels.length) {
+      // No se encontró el canal a eliminar
+      return res.status(404).send("Canal no encontrado.");
+    }
+
     await stopBroadcast(name); // Detener transmisión si está activa
-    await saveChannels(updatedChannels);
+    await saveChannels(updatedChannels); // Guardar los cambios en el archivo
     res.redirect("/channels");
   } catch (err) {
     res.status(500).send("Error al eliminar el canal.");
