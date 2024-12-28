@@ -1,14 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Canales</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMy1zwyMA2AlAql7nfXxM6YbUP1f7Bj9ajsB2a" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css">
   <style>
-    /* Base styles */
+    /* Mantenemos los estilos base anteriores */
     body {
       font-family: 'Inter', sans-serif;
       margin: 0;
@@ -48,37 +47,75 @@
     }
     li {
       margin-bottom: 1.5rem;
-      padding: 1rem;
+      padding: 1.5rem;
       background: #f1f1f1;
       border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .channel-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      flex-wrap: wrap;
+      margin-bottom: 1rem;
     }
-    li strong {
-      font-size: 1.1rem;
-      color: #007BFF;
+    .channel-info {
+      flex: 1;
     }
-    p {
-      margin: 0.5rem 0;
+    .channel-status {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-weight: 600;
+      text-align: center;
+      min-width: 100px;
+    }
+    .status-running {
+      background-color: #28a745;
+      color: white;
+    }
+    .status-stopped {
+      background-color: #dc3545;
+      color: white;
+    }
+    .status-error {
+      background-color: #ffc107;
+      color: black;
     }
     form {
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
+    .form-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
     label {
       display: flex;
       flex-direction: column;
       font-size: 0.9rem;
+      gap: 0.5rem;
     }
-    input {
-      padding: 0.5rem;
+    input, select {
+      padding: 0.75rem;
       border-radius: 4px;
       border: 1px solid #ccc;
       font-size: 1rem;
+    }
+    .auth-fields {
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 4px;
+      margin-top: 1rem;
+      display: none;
+    }
+    .auth-fields.show {
+      display: block;
+    }
+    .buttons-container {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
     }
     button {
       padding: 0.75rem 1.5rem;
@@ -89,45 +126,23 @@
       color: white;
       cursor: pointer;
       transition: background-color 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     button:hover {
       background: #0056b3;
     }
-    .icon-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 1.2rem;
-      color: #007BFF;
-      transition: color 0.3s;
-    }
-    .icon-btn:hover {
-      color: #0056b3;
-    }
-    .form-section {
-      display: flex;
-      justify-content: space-between;
-      gap: 2rem;
-    }
-    @media (max-width: 768px) {
-      .form-section {
-        flex-direction: column;
-      }
-    }
-    /* Ensure long URLs don't push elements out of view */
-    input[type="text"] {
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    .status-btn {
-      background-color: #28a745;
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .status-btn.error {
+    button.delete {
       background-color: #dc3545;
+    }
+    button.delete:hover {
+      background-color: #c82333;
+    }
+    .channel-controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
     }
   </style>
 </head>
@@ -142,34 +157,81 @@
       <ul>
         <% channels.forEach((channel, index) => { %>
           <li>
-            <div>
-              <strong><%= channel.name %></strong>
-              <p>HLS URL: <%= channel.hlsUrl %></p>
-              <p>RTMP URL: <%= channel.rtmpUrl %></p>
+            <div class="channel-header">
+              <div class="channel-info">
+                <strong><%= channel.name %></strong>
+                <div class="channel-status <%= channel.status ? `status-${channel.status}` : 'status-stopped' %>">
+                  <%= channel.status ? channel.status.charAt(0).toUpperCase() + channel.status.slice(1) : 'Detenido' %>
+                </div>
+              </div>
             </div>
-            <form action="/channels/edit" method="POST">
+
+            <form action="/channels/edit" method="POST" class="edit-form">
               <input type="hidden" name="index" value="<%= index %>">
-              <label>
-                Nombre:
-                <input type="text" name="name" value="<%= channel.name %>" required>
-              </label>
-              <label>
-                HLS URL:
-                <input type="text" name="hlsUrl" value="<%= channel.hlsUrl %>" required>
-              </label>
-              <label>
-                RTMP URL:
-                <input type="text" name="rtmpUrl" value="<%= channel.rtmpUrl %>" required>
-              </label>
-              <button type="submit" class="icon-btn"><i class="fas fa-edit"></i> Editar</button>
-            </form>
-            <form action="/channels/start" method="POST">
-                <input type="hidden" name="name" value="<%= channel.name %>">
-                <button type="submit">Iniciar Transmisión</button>
-            </form>
-            <form action="/channels/stop" method="POST" style="display: inline;">
-              <input type="hidden" name="name" value="<%= channel.name %>">
-              <button type="submit" class="status-btn error"><i class="fas fa-stop"></i> Detener Transmisión</button>
+              
+              <div class="form-group">
+                <label>
+                  Nombre:
+                  <input type="text" name="name" value="<%= channel.name %>" required>
+                </label>
+                <label>
+                  RTMP URL:
+                  <input type="text" name="rtmpUrl" value="<%= channel.rtmpUrl %>" required>
+                </label>
+                <label>
+                  Tipo de Canal:
+                  <select name="channelType" class="channel-type-select" onchange="toggleAuthFields(this)">
+                    <option value="direct" <%= !channel.requiresAuth ? 'selected' : '' %>>URL Directa</option>
+                    <option value="tdmax" <%= channel.requiresAuth ? 'selected' : '' %>>TDMax</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="auth-fields <%= channel.requiresAuth ? 'show' : '' %>">
+                <div class="form-group">
+                  <label>
+                    Email:
+                    <input type="email" name="authEmail" value="<%= channel.authEmail || '' %>">
+                  </label>
+                  <label>
+                    Contraseña:
+                    <input type="password" name="authPassword" value="<%= channel.authPassword || '' %>">
+                  </label>
+                  <label>
+                    URL de Stream:
+                    <input type="text" name="streamPageUrl" value="<%= channel.streamPageUrl || '' %>">
+                  </label>
+                  <label>
+                    Intervalo de Actualización (ms):
+                    <input type="number" name="refreshInterval" value="<%= channel.refreshInterval || 3600000 %>">
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group direct-url <%= !channel.requiresAuth ? 'show' : '' %>">
+                <label>
+                  HLS URL:
+                  <input type="text" name="hlsUrl" value="<%= channel.hlsUrl || '' %>">
+                </label>
+              </div>
+
+              <div class="channel-controls">
+                <button type="submit" class="icon-btn">
+                  <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+                <form action="/channels/start" method="POST" style="display: inline;">
+                  <input type="hidden" name="name" value="<%= channel.name %>">
+                  <button type="submit" <%= channel.status === 'running' ? 'disabled' : '' %>>
+                    <i class="fas fa-play"></i> Iniciar
+                  </button>
+                </form>
+                <form action="/channels/stop" method="POST" style="display: inline;">
+                  <input type="hidden" name="name" value="<%= channel.name %>">
+                  <button type="submit" class="delete" <%= channel.status === 'stopped' ? 'disabled' : '' %>>
+                    <i class="fas fa-stop"></i> Detener
+                  </button>
+                </form>
+              </div>
             </form>
           </li>
         <% }) %>
@@ -179,23 +241,73 @@
     <section>
       <h2>Agregar Nuevo Canal</h2>
       <form action="/channels/add" method="POST">
-        <div class="form-section">
+        <div class="form-group">
           <label>
             Nombre:
             <input type="text" name="name" placeholder="Nombre del canal" required>
           </label>
           <label>
-            HLS URL:
-            <input type="text" name="hlsUrl" placeholder="http://example.com/hls.m3u8" required>
+            RTMP URL:
+            <input type="text" name="rtmpUrl" placeholder="rtmp://ejemplo.com/live" required>
           </label>
           <label>
-            RTMP URL:
-            <input type="text" name="rtmpUrl" placeholder="rtmp://example.com/live" required>
+            Tipo de Canal:
+            <select name="channelType" onchange="toggleAuthFields(this)">
+              <option value="direct">URL Directa</option>
+              <option value="tdmax">TDMax</option>
+            </select>
           </label>
         </div>
-        <button type="submit"><i class="fas fa-plus"></i> Agregar Canal</button>
+
+        <div class="auth-fields">
+          <div class="form-group">
+            <label>
+              Email:
+              <input type="email" name="authEmail" placeholder="usuario@ejemplo.com">
+            </label>
+            <label>
+              Contraseña:
+              <input type="password" name="authPassword" placeholder="Contraseña">
+            </label>
+            <label>
+              URL de Stream:
+              <input type="text" name="streamPageUrl" placeholder="https://www.tdmax.com/player/channel/ID">
+            </label>
+            <label>
+              Intervalo de Actualización (ms):
+              <input type="number" name="refreshInterval" value="3600000">
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group direct-url show">
+          <label>
+            HLS URL:
+            <input type="text" name="hlsUrl" placeholder="https://ejemplo.com/stream.m3u8">
+          </label>
+        </div>
+
+        <button type="submit">
+          <i class="fas fa-plus"></i> Agregar Canal
+        </button>
       </form>
     </section>
   </main>
+
+  <script>
+    function toggleAuthFields(select) {
+      const form = select.closest('form');
+      const authFields = form.querySelector('.auth-fields');
+      const directUrl = form.querySelector('.direct-url');
+      
+      if (select.value === 'tdmax') {
+        authFields.classList.add('show');
+        directUrl.classList.remove('show');
+      } else {
+        authFields.classList.remove('show');
+        directUrl.classList.add('show');
+      }
+    }
+  </script>
 </body>
 </html>

@@ -1,20 +1,18 @@
-{
-  "channels": [
-    {
-      "name": "Canal 6",
-      "hlsUrl": "https://d1vr8yxz55pucr.cloudfront.net/original.m3u8",
-      "rtmpUrl": "rtmp://fluestabiliz.giize.com/costaCANAL11",
-      "requiresAuth": false
-    },
-    {
-      "name": "Canal TDMax",
-      "hlsUrl": "",
-      "rtmpUrl": "rtmp://destino.com/live/canal2",
-      "requiresAuth": true,
-      "authEmail": "usuario@ejemplo.com",
-      "authPassword": "contraseña",
-      "streamPageUrl": "https://www.tdmax.com/player/channel/ID",
-      "refreshInterval": 3600000
-    }
-  ]
-}
+[
+  {
+    "name": "Canal 6",
+    "hlsUrl": "https://d1vr8yxz55pucr.cloudfront.net/original.m3u8",
+    "rtmpUrl": "rtmp://fluestabiliz.giize.com/costaCANAL11",
+    "requiresAuth": false
+  },
+  {
+    "name": "Canal TDMax",
+    "hlsUrl": "",
+    "rtmpUrl": "rtmp://destino.com/live/canal2",
+    "requiresAuth": true,
+    "authEmail": "usuario@ejemplo.com",
+    "authPassword": "contraseña",
+    "streamPageUrl": "https://www.tdmax.com/player/channel/ID",
+    "refreshInterval": 3600000
+  }
+]
