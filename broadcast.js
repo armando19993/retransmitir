@@ -1,8 +1,3 @@
-const ffmpeg = require('fluent-ffmpeg');
-
-// Almacena los procesos de FFmpeg activos
-const ffmpegProcesses = {};
-
 const broadcastManager = {
   // Inicia la transmisión para un canal
   startBroadcast: async function(channel) {
@@ -11,9 +6,10 @@ const broadcastManager = {
       return;
     }
 
+    // Verifica si ya hay un proceso activo para este canal y lo detiene
     if (ffmpegProcesses[channel.name]?.process) {
-      console.log(`Ya existe una transmisión activa para ${channel.name}`);
-      return;
+      console.log(`Transmisión activa detectada para ${channel.name}. Deteniendo la transmisión anterior.`);
+      await this.stopBroadcast(channel);  // Detener la transmisión anterior antes de iniciar una nueva
     }
 
     console.log(`Iniciando transmisión para ${channel.name}`);
@@ -78,14 +74,6 @@ const broadcastManager = {
     }
   },
 
-  // Inicia la transmisión para todos los canales
-  startAllBroadcasts: async function(channels) {
-    console.log("Iniciando transmisiones para todos los canales...");
-    for (const channel of channels) {
-      await this.startBroadcast(channel);
-    }
-  },
-
   // Detiene la transmisión de un canal
   stopBroadcast: async function(channel) {
     return new Promise((resolve) => {
@@ -111,6 +99,14 @@ const broadcastManager = {
     console.log("Deteniendo transmisiones para todos los canales...");
     for (const channel of channels) {
       await this.stopBroadcast(channel);
+    }
+  },
+
+  // Inicia todas las transmisiones
+  startAllBroadcasts: async function(channels) {
+    console.log("Iniciando transmisiones para todos los canales...");
+    for (const channel of channels) {
+      await this.startBroadcast(channel);
     }
   },
 
