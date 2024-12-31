@@ -1,3 +1,8 @@
+const ffmpeg = require('fluent-ffmpeg');
+
+// Almacena los procesos de FFmpeg activos
+const ffmpegProcesses = {};
+
 const broadcastManager = {
   // Inicia la transmisión para un canal
   startBroadcast: async function(channel) {
