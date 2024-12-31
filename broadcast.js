@@ -1,7 +1,7 @@
 const broadcastManager = {
   // Inicia la transmisión para un canal
   startBroadcast: async function(channel) {
-    if (!channel.rtmpUrl) {
+    if (!channel.rtmp_url) {
       console.log(`RTMP URL ausente para el canal ${channel.name}. Transmisión no iniciada.`);
       return;
     }
@@ -13,12 +13,12 @@ const broadcastManager = {
     }
 
     console.log(`Iniciando transmisión para ${channel.name}`);
-    console.log(`HLS URL: ${channel.hlsUrl}`);
-    console.log(`RTMP URL: ${channel.rtmpUrl}`);
+    console.log(`HLS URL: ${channel.playlist_url}`);
+    console.log(`RTMP URL: ${channel.rtmp_url}`);
 
     try {
       const process = ffmpeg()
-        .input(channel.hlsUrl)
+        .input(channel.playlist_url)
         .inputOptions([
           '-re',                // Lee input a velocidad nativa
           '-reconnect 1',       // Intenta reconectar si pierde conexión
@@ -33,7 +33,7 @@ const broadcastManager = {
           '-b:a 128k',          // Bitrate de audio
           '-f flv'              // Formato de salida
         ])
-        .output(channel.rtmpUrl);
+        .output(channel.rtmp_url);
 
       // Manejadores de eventos
       process
