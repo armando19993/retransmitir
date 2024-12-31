@@ -9,6 +9,7 @@ import time
 # Opciones para el navegador
 chrome_options = Options()
 chrome_options.add_argument("--headless")  # Ejecuta el navegador sin ventana visible
+chrome_options.add_argument("--no-sandbox")  # Ejecuta el navegador sin ventana visible
 
 # Inicializa el WebDriver para Chrome con Selenium-Wire
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
