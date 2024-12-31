@@ -70,22 +70,27 @@ app.post("/channels/add", async (req, res) => {
 
 // Ruta para iniciar transmisión
 app.post("/channels/start", async (req, res) => {
-  const { name } = req.body;
-
   try {
     const data = await fs.promises.readFile(channelsFile, "utf-8");
     const channels = JSON.parse(data);
-    const channel = channels.find((c) => c.name === name);
 
-    if (channel) {
-      
-      await broadcastManager.startBroadcast(channel);
-      res.redirect("/channels");
-    } else {
-      res.status(404).send("Canal no encontrado.");
+    for (const channel of channels) {
+      if (channel.rtmp_url) {
+        try {
+          await broadcastManager.startBroadcast(channel);
+          console.log(`Transmisión iniciada para el canal: ${channel.name}`);
+        } catch (err) {
+          console.error(`Error al iniciar transmisión para ${channel.name}:`, err.message);
+        }
+      } else {
+        console.log(`Canal ${channel.name} no tiene una URL RTMP válida, omitido.`);
+      }
     }
+
+    res.redirect("/channels");
   } catch (err) {
-    res.status(500).send("Error al iniciar la transmisión.");
+    console.error("Error al iniciar las transmisiones:", err.message);
+    res.status(500).send("Error al iniciar las transmisiones.");
   }
 });
 

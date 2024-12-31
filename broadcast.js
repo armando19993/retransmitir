@@ -6,6 +6,11 @@ const ffmpegProcesses = {};
 const broadcastManager = {
   // Inicia la transmisión para un canal
   startBroadcast: async function(channel) {
+    if (!channel.rtmpUrl) {
+      console.log(`RTMP URL ausente para el canal ${channel.name}. Transmisión no iniciada.`);
+      return;
+    }
+
     if (ffmpegProcesses[channel.name]?.process) {
       console.log(`Ya existe una transmisión activa para ${channel.name}`);
       return;
@@ -38,7 +43,7 @@ const broadcastManager = {
       process
         .on('start', () => {
           console.log(`Transmisión iniciada para ${channel.name}`);
-          ffmpegProcesses[channel.name] = { 
+          ffmpegProcesses[channel.name] = {
             process,
             status: 'running',
             startTime: new Date()
@@ -46,16 +51,16 @@ const broadcastManager = {
         })
         .on('error', (err) => {
           console.error(`Error en la transmisión de ${channel.name}:`, err.message);
-          ffmpegProcesses[channel.name] = { 
-            process: null, 
+          ffmpegProcesses[channel.name] = {
+            process: null,
             status: 'error',
             lastError: err.message
           };
         })
         .on('end', () => {
           console.log(`Transmisión finalizada para ${channel.name}`);
-          ffmpegProcesses[channel.name] = { 
-            process: null, 
+          ffmpegProcesses[channel.name] = {
+            process: null,
             status: 'stopped',
             endTime: new Date()
           };
@@ -63,16 +68,21 @@ const broadcastManager = {
 
       // Inicia la transmisión
       process.run();
-      
-      return true;
     } catch (error) {
-      console.error(`Error al iniciar la transmisión de ${channel.name}:`, error);
-      ffmpegProcesses[channel.name] = { 
-        process: null, 
+      console.error(`Error al iniciar la transmisión de ${channel.name}:`, error.message);
+      ffmpegProcesses[channel.name] = {
+        process: null,
         status: 'error',
         lastError: error.message
       };
-      throw error;
+    }
+  },
+
+  // Inicia la transmisión para todos los canales
+  startAllBroadcasts: async function(channels) {
+    console.log("Iniciando transmisiones para todos los canales...");
+    for (const channel of channels) {
+      await this.startBroadcast(channel);
     }
   },
 
@@ -83,8 +93,8 @@ const broadcastManager = {
       if (channelProcess?.process) {
         console.log(`Deteniendo transmisión para ${channel.name}`);
         channelProcess.process.kill('SIGTERM');
-        ffmpegProcesses[channel.name] = { 
-          process: null, 
+        ffmpegProcesses[channel.name] = {
+          process: null,
           status: 'stopped',
           endTime: new Date()
         };
@@ -96,11 +106,19 @@ const broadcastManager = {
     });
   },
 
+  // Detiene la transmisión de todos los canales
+  stopAllBroadcasts: async function(channels) {
+    console.log("Deteniendo transmisiones para todos los canales...");
+    for (const channel of channels) {
+      await this.stopBroadcast(channel);
+    }
+  },
+
   // Obtiene el estado de un canal
   getStatus: function(channelName) {
-    return ffmpegProcesses[channelName] || { 
-      process: null, 
-      status: 'stopped' 
+    return ffmpegProcesses[channelName] || {
+      process: null,
+      status: 'stopped'
     };
   },
 
