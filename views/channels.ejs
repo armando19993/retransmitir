@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://vjs.zencdn.net/7.21.1/video-js.css" rel="stylesheet">
     <style>
-        /* Mantén el estilo existente */
         :root {
             --primary-color: #2563eb;
             --danger-color: #dc2626;
@@ -43,6 +42,7 @@
 
         .channels-grid {
             display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
 
@@ -124,7 +124,9 @@
                         <video
                             id="video-<%= index %>"
                             class="video-js"
-                            controls
+                            autoplay
+                            muted
+                            loop
                             preload="auto"
                             data-setup="{}"
                             poster="https://via.placeholder.com/640x360?text=Esperando+transmisión"
