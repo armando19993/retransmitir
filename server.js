@@ -167,6 +167,58 @@ app.post("/channels/edit", async (req, res) => {
   }
 });
 
+// Agregar estas nuevas rutas justo antes de app.listen(PORT, ...)
+
+// Ruta para iniciar todas las transmisiones
+app.post("/channels/startAll", async (req, res) => {
+  try {
+    const data = await fs.promises.readFile(channelsFile, "utf-8");
+    const channels = JSON.parse(data);
+
+    console.log("Iniciando todas las transmisiones...");
+    for (const channel of channels) {
+      if (channel.rtmp_url) {
+        try {
+          await broadcastManager.startBroadcast(channel);
+          console.log(`Transmisión iniciada para el canal: ${channel.name}`);
+        } catch (err) {
+          console.error(`Error al iniciar transmisión para ${channel.name}:`, err.message);
+        }
+      } else {
+        console.log(`Canal ${channel.name} no tiene una URL RTMP válida, omitido.`);
+      }
+    }
+
+    res.redirect("/channels");
+  } catch (err) {
+    console.error("Error al iniciar todas las transmisiones:", err.message);
+    res.status(500).send("Error al iniciar todas las transmisiones.");
+  }
+});
+
+// Ruta para detener todas las transmisiones
+app.post("/channels/stopAll", async (req, res) => {
+  try {
+    const data = await fs.promises.readFile(channelsFile, "utf-8");
+    const channels = JSON.parse(data);
+
+    console.log("Deteniendo todas las transmisiones...");
+    for (const channel of channels) {
+      try {
+        await broadcastManager.stopBroadcast(channel);
+        console.log(`Transmisión detenida para el canal: ${channel.name}`);
+      } catch (err) {
+        console.error(`Error al detener transmisión para ${channel.name}:`, err.message);
+      }
+    }
+
+    res.redirect("/channels");
+  } catch (err) {
+    console.error("Error al detener todas las transmisiones:", err.message);
+    res.status(500).send("Error al detener todas las transmisiones.");
+  }
+});
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
