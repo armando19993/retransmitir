@@ -155,8 +155,8 @@ app.post("/channels/edit", (req, res) => {
       // Actualizar el canal con la nueva información y la fecha de actualización
       channels[index] = {
         name,
-        hlsUrl,
-        rtmpUrl,
+        url,
+        rtmp_url,
         lastUpdated: new Date().toISOString() // Fecha de la última actualización
       };
     } else {
