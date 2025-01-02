@@ -43,6 +43,21 @@ urls = [
         'url': 'https://www.tdmax.com/player/channel/65d7aca4e4b0140cbf380bd0?isFromTabLayout=true',
         'rtmp_url': None,
     },
+    {
+        'name': 'Channel 3',
+        'url': "https://www.tdmax.com/player/channel/641cba02e4b068d89b2344e3?isFromTabLayout=true",
+        'rtmp_url': None
+    },
+    {
+        'name': 'Channel 4',
+        'url': "https://www.tdmax.com/player/channel/65d7ac79e4b0140cbf380bca?isFromTabLayout=true",
+        'rtmp_url': None
+    },
+    {
+        'name': 'Channel 5',
+        'url': "https://www.tdmax.com/player/channel/664237788f085ac1f2a15f81?isFromTabLayout=true",
+        'rtmp_url': None
+    }
 ]
 
 # Función para descomprimir las respuestas comprimidas
