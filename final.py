@@ -33,10 +33,10 @@ def extract_channel_id(channel_url):
 # Visita cada URL y actualiza las entradas en el archivo JSON
 for url in urls:
     print(f"Navegando a {url['name']}")
-    driver.get(url['url'])
+    driver.get(url['id'])
     time.sleep(10)  # Espera para que las solicitudes se completen
 
-    channel_id = extract_channel_id(url['url'])
+    channel_id = extract_channel_id(url['id'])
 
     # Busca las solicitudes específicas
     for request in driver.requests:

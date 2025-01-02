@@ -34,27 +34,27 @@ time.sleep(10)
 # Lista de URLs a visitar
 urls = [
     {
-        'name': 'Channel 1',
+        'name': 'Teletica',
         'url': 'https://www.tdmax.com/player/channel/617c2f66e4b045a692106126?isFromTabLayout=true',
         'rtmp_url': 'rtmp://fluestabiliz.giize.com/costaCANAL11',
     },
     {
-        'name': 'Channel 2',
+        'name': 'Canal 6',
         'url': 'https://www.tdmax.com/player/channel/65d7aca4e4b0140cbf380bd0?isFromTabLayout=true',
         'rtmp_url': None,
     },
     {
-        'name': 'Channel 3',
+        'name': 'FuTV',
         'url': "https://www.tdmax.com/player/channel/641cba02e4b068d89b2344e3?isFromTabLayout=true",
         'rtmp_url': None
     },
     {
-        'name': 'Channel 4',
+        'name': 'Canal 11',
         'url': "https://www.tdmax.com/player/channel/65d7ac79e4b0140cbf380bca?isFromTabLayout=true",
         'rtmp_url': None
     },
     {
-        'name': 'Channel 5',
+        'name': 'Tigo',
         'url': "https://www.tdmax.com/player/channel/664237788f085ac1f2a15f81?isFromTabLayout=true",
         'rtmp_url': None
     }
