@@ -1,162 +1,333 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestión de Canales</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <style>
-    /* Mantenemos los estilos que ya tenías */
-    body {
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-      color: #333;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Canales</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --danger-color: #dc2626;
+            --success-color: #16a34a;
+            --warning-color: #ca8a04;
+            --background-color: #f8fafc;
+            --card-background: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+        }
 
-    /* ... resto de tus estilos ... */
-  </style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+
+        header {
+            background-color: var(--card-background);
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .back-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .control-panel {
+            background-color: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .global-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .channels-grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .channel-card {
+            background-color: var(--card-background);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .channel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .channel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .channel-status {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .status-running {
+            background-color: #dcfce7;
+            color: var(--success-color);
+        }
+
+        .status-stopped {
+            background-color: #fee2e2;
+            color: var(--danger-color);
+        }
+
+        .channel-form {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: grid;
+            gap: 0.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: -2px;
+        }
+
+        .channel-controls {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .countdown {
+            font-size: 0.875rem;
+            color: var(--warning-color);
+            margin-top: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .channels-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .channels-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
 </head>
 
 <body>
-  <header>
-    <h1>Gestión de Canales</h1>
-    <a href="/">Volver al inicio</a>
-  </header>
-  <main>
-    <!-- Lista de canales -->
-    <section>
-      <h2>Lista de Canales</h2>
-      <ul>
-        <% channels.forEach((channel, index)=> { %>
-          <li>
-            <div>
-              <strong>
-                <%= channel.name %>
-              </strong>
+    <header>
+        <div class="header-content">
+            <h1 class="header-title">Gestión de Canales</h1>
+            <a href="/" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                Volver al inicio
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <section class="control-panel">
+            <div class="global-controls">
+                <form action="/channels/startAll" method="POST">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-play"></i>
+                        Iniciar Todas las Transmisiones
+                    </button>
+                </form>
+
+                <form action="/channels/stopAll" method="POST">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-stop"></i>
+                        Detener Todas las Transmisiones
+                    </button>
+                </form>
             </div>
-            <div>
-              Última actualización: <%= channel.lastUpdated %>
-            </div>
-            <div class="countdown" id="countdown-<%= index %>"></div>
+        </section>
 
-            <form action="/channels/edit" method="POST" class="channel-form">
-              <input type="hidden" name="index" value="<%= index %>">
-              <div class="form-group">
-                <label>
-                  Nombre:
-                  <input type="text" name="name" value="<%= channel.name %>" required>
-                </label>
-                <label>
-                  HLS URL:
-                  <input type="text" name="playlist_url" value="<%= channel.playlist_url %>" required>
-                </label>
-                <label>
-                  RTMP URL:
-                  <input type="text" name="rtmp_url" value="<%= channel.rtmp_url || '' %>">
-                </label>
-              </div>
-              <div class="channel-controls">
-                <button type="submit" class="save-btn">Guardar</button>
-                <button type="button" class="start-btn"
-                  onclick="controlStream('<%= channel.name %>', 'start')">Iniciar</button>
-                <button type="button" class="stop-btn"
-                  onclick="controlStream('<%= channel.name %>', 'stop')">Detener</button>
-                <button type="button" class="delete-btn"
-                  onclick="deleteChannel('<%= channel.name %>')">Eliminar</button>
-              </div>
-            </form>
-          </li>
-          <% }); %>
-      </ul>
-    </section>
+        <section class="channels-grid">
+            <% channels.forEach((channel, index) => { %>
+                <div class="channel-card">
+                    <div class="channel-header">
+                        <h3 class="channel-title"><%= channel.name %></h3>
+                        <span class="channel-status <%= channel.status === 'running' ? 'status-running' : 'status-stopped' %>">
+                            <%= channel.status === 'running' ? 'Transmitiendo' : 'Detenido' %>
+                        </span>
+                    </div>
 
-    <!-- Formulario para agregar nuevo canal -->
-    <div class="control-buttons" style="margin: 20px 0;">
-      <form action="/channels/startAll" method="POST" style="display: inline;">
-        <button type="submit" class="btn btn-success">
-          Iniciar Todas las Transmisiones
-        </button>
-      </form>
+                    <form action="/channels/edit" method="POST" class="channel-form">
+                        <input type="hidden" name="index" value="<%= index %>">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Nombre:</label>
+                            <input type="text" name="name" value="<%= channel.name %>" class="form-input" required>
+                        </div>
 
-      <form action="/channels/stopAll" method="POST" style="display: inline; margin-left: 10px;">
-        <button type="submit" class="btn btn-danger">
-          Detener Todas las Transmisiones
-        </button>
-      </form>
-    </div>
-  </main>
+                        <div class="form-group">
+                            <label class="form-label">HLS URL:</label>
+                            <input type="text" name="playlist_url" value="<%= channel.playlist_url %>" class="form-input" required>
+                        </div>
 
-  <script>
-    // Función para controlar el stream
-    async function controlStream(channelName, action) {
-      try {
-        const response = await fetch(`/channels/${action}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ name: channelName })
-        });
+                        <div class="form-group">
+                            <label class="form-label">RTMP URL:</label>
+                            <input type="text" name="rtmp_url" value="<%= channel.rtmp_url || '' %>" class="form-input">
+                        </div>
 
-        if (response.ok) {
-          location.reload();
-        } else {
-          alert(`Error al ${action === 'start' ? 'iniciar' : 'detener'} el stream`);
+                        <div class="channel-controls">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                Guardar
+                            </button>
+                            <button type="button" class="btn btn-success" onclick="controlStream('<%= channel.name %>', 'start')">
+                                <i class="fas fa-play"></i>
+                                Iniciar
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="controlStream('<%= channel.name %>', 'stop')">
+                                <i class="fas fa-stop"></i>
+                                Detener
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="countdown" id="countdown-<%= index %>"></div>
+                </div>
+            <% }); %>
+        </section>
+    </main>
+
+    <script>
+        async function controlStream(channelName, action) {
+            try {
+                const response = await fetch(`/channels/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: channelName })
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert(`Error al ${action === 'start' ? 'iniciar' : 'detener'} el stream`);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            }
         }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error al procesar la solicitud');
-      }
-    }
 
-    // Función para eliminar canal
-    async function deleteChannel(channelName) {
-      if (confirm('¿Está seguro de que desea eliminar este canal?')) {
-        try {
-          const response = await fetch('/channels/delete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: channelName })
-          });
+        function updateCountdown(lastUpdatedTime, elementId) {
+            const countdownElement = document.getElementById(elementId);
+            const now = new Date();
+            const lastUpdated = new Date(lastUpdatedTime);
+            const hoursDifference = (now - lastUpdated) / 1000 / 60 / 60;
 
-          if (response.ok) {
-            location.reload();
-          } else {
-            alert('Error al eliminar el canal');
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          alert('Error al procesar la solicitud');
+            if (hoursDifference < 4) {
+                const countdownTime = 4 - hoursDifference;
+                const countdownText = `${Math.floor(countdownTime)} horas restantes`;
+                countdownElement.textContent = countdownText;
+            } else {
+                countdownElement.textContent = "Tiempo agotado";
+            }
         }
-      }
-    }
-
-    // Función para calcular la cuenta regresiva (la que ya tenías)
-    function updateCountdown(lastUpdatedTime, elementId) {
-      const countdownElement = document.getElementById(elementId);
-      const now = new Date();
-      const lastUpdated = new Date(lastUpdatedTime);
-      const hoursDifference = (now - lastUpdated) / 1000 / 60 / 60;
-
-      if (hoursDifference < 4) {
-        const countdownTime = 4 - hoursDifference;
-        const countdownText = `${Math.floor(countdownTime)} horas restantes`;
-        countdownElement.textContent = countdownText;
-      } else {
-        countdownElement.textContent = "Tiempo agotado";
-      }
-    }
 
         // Inicializar las cuentas regresivas
         <% channels.forEach((channel, index) => { %>
-      updateCountdown("<%= channel.lastUpdated %>", "countdown-<%= index %>");
+            updateCountdown("<%= channel.lastUpdated %>", "countdown-<%= index %>");
         <% }); %>
-  </script>
+    </script>
 </body>
-
 </html>
