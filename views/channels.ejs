@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Canales</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video-js.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #2563eb;
@@ -23,6 +23,7 @@
             background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.5;
+            margin: 0;
         }
 
         header {
@@ -99,6 +100,7 @@
         .channels-grid {
             display: grid;
             gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         }
 
         .channel-card {
@@ -138,14 +140,20 @@
         }
 
         .video-container {
+            position: relative;
+            padding-top: 56.25%; /* 16:9 Aspect Ratio */
             width: 100%;
-            overflow: hidden;
             border-radius: 0.5rem;
+            overflow: hidden;
+            background: #000;
         }
 
         .video-js {
-            width: 100%;
-            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100% !important;
+            height: 100% !important;
         }
 
         @media (min-width: 768px) {
@@ -170,57 +178,108 @@
     </header>
 
     <main>
-        <!-- Panel de controles globales -->
         <section class="control-panel">
-            <form action="/channels/startAll" method="POST">
-                <button type="submit" class="btn btn-success">
-                    <i class="fas fa-play"></i>
-                    Iniciar Todas las Transmisiones
-                </button>
-            </form>
+            <button class="btn btn-success" onclick="startAllPlayers()">
+                <i class="fas fa-play"></i>
+                Iniciar Todas las Transmisiones
+            </button>
 
-            <form action="/channels/stopAll" method="POST">
-                <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-stop"></i>
-                    Detener Todas las Transmisiones
-                </button>
-            </form>
+            <button class="btn btn-danger" onclick="stopAllPlayers()">
+                <i class="fas fa-stop"></i>
+                Detener Todas las Transmisiones
+            </button>
         </section>
 
-        <!-- Grid de canales -->
-        <section class="channels-grid">
-            <% channels.forEach((channel, index) => { %>
-                <div class="channel-card">
-                    <div class="channel-header">
-                        <h3 class="channel-title"><%= channel.name %></h3>
-                        <span class="channel-status <%= channel.status === 'running' ? 'status-running' : 'status-stopped' %>">
-                            <%= channel.status === 'running' ? 'Transmitiendo' : 'Detenido' %>
-                        </span>
-                    </div>
-
-                    <div class="video-container">
-                        <video
-                            id="video-<%= index %>"
-                            class="video-js"
-                            autoplay
-                            muted
-                            loop
-                            preload="auto"
-                            data-setup="{}"
-                            poster="https://via.placeholder.com/640x360?text=Esperando+transmisión"
-                        >
-                            <% if (channel.rtmp_url) { %>
-                                <source src="<%= channel.rtmp_url.endsWith('video.m3u8') ? channel.rtmp_url : channel.rtmp_url + '/video.m3u8' %>" type="application/x-mpegURL">
-                            <% } else { %>
-                                <p>La URL del canal no está configurada.</p>
-                            <% } %>
-                        </video>
-                    </div>
-                </div>
-            <% }); %>
+        <section class="channels-grid" id="channelsContainer">
+            <!-- Los canales se agregarán dinámicamente aquí -->
         </section>
     </main>
 
-    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.20.3/video.min.js"></script>
+    <script>
+        // Configuración de los canales
+        const channels = [
+            {
+                name: "Canal 11",
+                rtmpUrl: "rtmp://fluestabiliz.giize.com/costaCANAL11",
+                status: "running"
+            }
+            // Agrega más canales aquí siguiendo el mismo formato
+        ];
+
+        // Función para convertir URL RTMP a HLS
+        function convertRtmpToHls(rtmpUrl) {
+            // Extrae el dominio y la ruta del RTMP
+            const urlParts = rtmpUrl.replace('rtmp://', '').split('/');
+            const domain = urlParts[0];
+            const path = urlParts.slice(1).join('/');
+            // Construye la URL HLS
+            return `https://${domain}/${path}/index.m3u8`;
+        }
+
+        // Función para crear un canal
+        function createChannelElement(channel, index) {
+            const hlsUrl = convertRtmpToHls(channel.rtmpUrl);
+            const channelHtml = `
+                <div class="channel-card">
+                    <div class="channel-header">
+                        <h3 class="channel-title">${channel.name}</h3>
+                    </div>
+                    <div class="video-container">
+                        <video
+                            id="player-${index}"
+                            class="video-js vjs-default-skin"
+                            controls
+                            preload="auto"
+                        >
+                            <source src="${hlsUrl}" type="application/x-mpegURL">
+                        </video>
+                    </div>
+                </div>
+            `;
+            return channelHtml;
+        }
+
+        // Inicializar los canales
+        function initializeChannels() {
+            const container = document.getElementById('channelsContainer');
+            let channelsHtml = '';
+            
+            channels.forEach((channel, index) => {
+                channelsHtml += createChannelElement(channel, index);
+            });
+            
+            container.innerHTML = channelsHtml;
+
+            // Inicializar los reproductores de video
+            channels.forEach((_, index) => {
+                videojs(`player-${index}`, {
+                    fluid: true,
+                    autoplay: false,
+                    preload: 'auto',
+                    controls: true,
+                    muted: true
+                });
+            });
+        }
+
+        // Funciones para controlar todos los reproductores
+        function startAllPlayers() {
+            channels.forEach((_, index) => {
+                const player = videojs(`player-${index}`);
+                player.play();
+            });
+        }
+
+        function stopAllPlayers() {
+            channels.forEach((_, index) => {
+                const player = videojs(`player-${index}`);
+                player.pause();
+            });
+        }
+
+        // Inicializar cuando el documento esté listo
+        document.addEventListener('DOMContentLoaded', initializeChannels);
+    </script>
 </body>
 </html>
