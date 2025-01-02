@@ -144,6 +144,12 @@ app.post("/channels/delete", async (req, res) => {
 app.post("/channels/edit", (req, res) => {
   const { index, name, url, rtmp_url } = req.body;
 
+  if (!rtmp_url) {
+    channels[index].rtmp_url = channels[index].rtmp_url;
+  } else {
+    channels[index].rtmp_url = rtmp_url;
+  }
+
   fs.readFile(channelsFile, "utf-8", (err, data) => {
     if (err) {
       return res.status(500).send("Error al leer el archivo de canales.");
