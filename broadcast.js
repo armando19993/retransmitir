@@ -6,26 +6,20 @@ const ffmpegProcesses = {};
 const broadcastManager = {
   // Inicia la transmisión para un canal
   startBroadcast: async function(channel) {
-    // Validar que tengamos tanto URL de origen como destino
-    if (!channel.playlist_url) {
-      console.log(`Error: URL de origen (playlist_url) no encontrada para el canal ${channel.name}`);
-      return;
-    }
-
     if (!channel.rtmp_url) {
-      console.log(`Error: URL de destino (rtmp_url) no encontrada para el canal ${channel.name}`);
+      console.log(`RTMP URL ausente para el canal ${channel.name}. Transmisión no iniciada.`);
       return;
     }
 
     // Verifica si ya hay un proceso activo para este canal y lo detiene
     if (ffmpegProcesses[channel.name]?.process) {
       console.log(`Transmisión activa detectada para ${channel.name}. Deteniendo la transmisión anterior.`);
-      await this.stopBroadcast(channel);
+      await this.stopBroadcast(channel);  // Detener la transmisión anterior antes de iniciar una nueva
     }
 
     console.log(`Iniciando transmisión para ${channel.name}`);
-    console.log(`Origen (HLS): ${channel.playlist_url}`);
-    console.log(`Destino (RTMP): ${channel.rtmp_url}`);
+    console.log(`HLS URL: ${channel.playlist_url}`);
+    console.log(`RTMP URL: ${channel.rtmp_url}`);
 
     try {
       const process = ffmpeg()
@@ -48,31 +42,21 @@ const broadcastManager = {
 
       // Manejadores de eventos
       process
-        .on('start', (commandLine) => {
+        .on('start', () => {
           console.log(`Transmisión iniciada para ${channel.name}`);
-          console.log('Comando FFmpeg:', commandLine);
           ffmpegProcesses[channel.name] = {
             process,
             status: 'running',
-            startTime: new Date(),
-            command: commandLine
+            startTime: new Date()
           };
         })
-        .on('error', (err, stdout, stderr) => {
+        .on('error', (err) => {
           console.error(`Error en la transmisión de ${channel.name}:`, err.message);
-          console.error('Error detallado:', stderr);
           ffmpegProcesses[channel.name] = {
             process: null,
             status: 'error',
-            lastError: err.message,
-            errorDetails: stderr
+            lastError: err.message
           };
-          
-          // Intentar reiniciar la transmisión después de un error
-          setTimeout(() => {
-            console.log(`Intentando reiniciar la transmisión para ${channel.name}...`);
-            this.startBroadcast(channel);
-          }, 5000); // Espera 5 segundos antes de reintentar
         })
         .on('end', () => {
           console.log(`Transmisión finalizada para ${channel.name}`);
@@ -81,12 +65,6 @@ const broadcastManager = {
             status: 'stopped',
             endTime: new Date()
           };
-          
-          // Intentar reiniciar la transmisión si finaliza inesperadamente
-          setTimeout(() => {
-            console.log(`Reiniciando transmisión para ${channel.name}...`);
-            this.startBroadcast(channel);
-          }, 5000);
         });
 
       // Inicia la transmisión
@@ -101,6 +79,7 @@ const broadcastManager = {
     }
   },
 
+  // Detiene la transmisión de un canal
   stopBroadcast: async function(channel) {
     return new Promise((resolve) => {
       const channelProcess = ffmpegProcesses[channel.name];
@@ -120,11 +99,33 @@ const broadcastManager = {
     });
   },
 
+  // Detiene la transmisión de todos los canales
+  stopAllBroadcasts: async function(channels) {
+    console.log("Deteniendo transmisiones para todos los canales...");
+    for (const channel of channels) {
+      await this.stopBroadcast(channel);
+    }
+  },
+
+  // Inicia todas las transmisiones
+  startAllBroadcasts: async function(channels) {
+    console.log("Iniciando transmisiones para todos los canales...");
+    for (const channel of channels) {
+      await this.startBroadcast(channel);
+    }
+  },
+
+  // Obtiene el estado de un canal
   getStatus: function(channelName) {
     return ffmpegProcesses[channelName] || {
       process: null,
       status: 'stopped'
     };
+  },
+
+  // Obtiene el estado de todos los canales
+  getAllStatus: function() {
+    return ffmpegProcesses;
   }
 };
 
