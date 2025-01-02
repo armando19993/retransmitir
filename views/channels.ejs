@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Canales</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link href="https://vjs.zencdn.net/7.21.1/video-js.css" rel="stylesheet">
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet">
     <style>
         :root {
             --primary-color: #2563eb;
@@ -34,15 +34,70 @@
             z-index: 10;
         }
 
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
         main {
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
         }
 
+        .control-panel {
+            background-color: var(--card-background);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
         .channels-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
             gap: 1.5rem;
         }
 
@@ -83,17 +138,26 @@
         }
 
         .video-container {
-            position: relative;
             width: 100%;
-            padding-top: 56.25%; /* 16:9 Aspect Ratio */
+            overflow: hidden;
+            border-radius: 0.5rem;
         }
 
         .video-js {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
+        }
+
+        @media (min-width: 768px) {
+            .channels-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .channels-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
     </style>
 </head>
@@ -102,14 +166,28 @@
     <header>
         <div class="header-content">
             <h1 class="header-title">Gestión de Canales</h1>
-            <a href="/" class="back-link">
-                <i class="fas fa-arrow-left"></i>
-                Volver al inicio
-            </a>
         </div>
     </header>
 
     <main>
+        <!-- Panel de controles globales -->
+        <section class="control-panel">
+            <form action="/channels/startAll" method="POST">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-play"></i>
+                    Iniciar Todas las Transmisiones
+                </button>
+            </form>
+
+            <form action="/channels/stopAll" method="POST">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-stop"></i>
+                    Detener Todas las Transmisiones
+                </button>
+            </form>
+        </section>
+
+        <!-- Grid de canales -->
         <section class="channels-grid">
             <% channels.forEach((channel, index) => { %>
                 <div class="channel-card">
@@ -132,7 +210,7 @@
                             poster="https://via.placeholder.com/640x360?text=Esperando+transmisión"
                         >
                             <% if (channel.rtmp_url) { %>
-                                <source src="<%= channel.rtmp_url %>" type="application/x-mpegURL">
+                                <source src="<%= channel.rtmp_url.endsWith('video.m3u8') ? channel.rtmp_url : channel.rtmp_url + '/video.m3u8' %>" type="application/x-mpegURL">
                             <% } else { %>
                                 <p>La URL del canal no está configurada.</p>
                             <% } %>
@@ -143,15 +221,6 @@
         </section>
     </main>
 
-    <script src="https://vjs.zencdn.net/7.21.1/video.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const players = [];
-            <% channels.forEach((channel, index) => { %>
-                const player = videojs("video-<%= index %>");
-                players.push(player);
-            <% }); %>
-        });
-    </script>
+    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
 </body>
 </html>
