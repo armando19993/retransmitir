@@ -87,7 +87,7 @@ app.post("/channels/start", async (req, res) => {
       }
     }
 
-    res.redirect("/channels");
+    res.redirect("channels");
   } catch (err) {
     console.error("Error al iniciar las transmisiones:", err.message);
     res.status(500).send("Error al iniciar las transmisiones.");
