@@ -158,7 +158,7 @@ app.post("/channels/edit", async (req, res) => {
       };
 
       await saveChannels(channels);
-      res.json(channels[index]);
+      res.redirect("/channels");
     } else {
       res.status(400).json({ error: "Índice de canal no válido" });
     }
