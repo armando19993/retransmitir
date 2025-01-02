@@ -170,8 +170,34 @@ app.post("/channels/edit", async (req, res) => {
 // Agregar estas nuevas rutas justo antes de app.listen(PORT, ...)
 
 // Ruta para iniciar todas las transmisiones
+const { exec } = require("child_process");
+
+// Ruta para iniciar todas las transmisiones
 app.post("/channels/startAll", async (req, res) => {
   try {
+    // Función para ejecutar el script Python
+    const runPythonScript = () => {
+      return new Promise((resolve, reject) => {
+        exec("python3 import\\ json.py", (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error al ejecutar el script Python: ${error.message}`);
+            return reject(error);
+          }
+          if (stderr) {
+            console.error(`Error en el script Python: ${stderr}`);
+          }
+          console.log(`Salida del script Python: ${stdout}`);
+          resolve();
+        });
+      });
+    };
+
+    // Ejecutar el script Python y esperar su finalización
+    console.log("Ejecutando script Python...");
+    await runPythonScript();
+    console.log("Script Python ejecutado correctamente.");
+
+    // Leer los canales del archivo JSON
     const data = await fs.promises.readFile(channelsFile, "utf-8");
     const channels = JSON.parse(data);
 
@@ -195,6 +221,7 @@ app.post("/channels/startAll", async (req, res) => {
     res.status(500).send("Error al iniciar todas las transmisiones.");
   }
 });
+
 
 // Ruta para detener todas las transmisiones
 app.post("/channels/stopAll", async (req, res) => {
