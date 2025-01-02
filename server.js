@@ -141,37 +141,31 @@ app.post("/channels/delete", async (req, res) => {
 
 
 
-app.post("/channels/edit", (req, res) => {
-  const { index, name, url, rtmp_url } = req.body;
+app.post("/channels/edit", async (req, res) => {
+  const { index, name, rtmp_url } = req.body;
 
-  fs.readFile(channelsFile, "utf-8", (err, data) => {
-    if (err) {
-      return res.status(500).send("Error al leer el archivo de canales.");
-    }
-
+  try {
+    const data = await fs.promises.readFile(channelsFile, "utf-8");
     const channels = JSON.parse(data);
 
     if (index >= 0 && index < channels.length) {
-      // Actualizar el canal con la nueva información y la fecha de actualización
+      // Mantener los campos existentes y actualizar solo los proporcionados
       channels[index] = {
-        name,
-        url,
-        rtmp_url,
-        lastUpdated: new Date().toISOString() // Fecha de la última actualización
+        ...channels[index],
+        name: name || channels[index].name,
+        rtmp_url: rtmp_url || channels[index].rtmp_url,
+        lastUpdated: new Date().toISOString()
       };
+
+      await saveChannels(channels);
+      res.json(channels[index]);
     } else {
-      return res.status(400).send("Índice de canal no válido.");
+      res.status(400).json({ error: "Índice de canal no válido" });
     }
-
-    fs.writeFile(channelsFile, JSON.stringify(channels, null, 2), (err) => {
-      if (err) {
-        return res.status(500).send("Error al guardar el canal editado.");
-      }
-      res.redirect("/channels");
-    });
-  });
+  } catch (err) {
+    res.status(500).json({ error: "Error al actualizar el canal" });
+  }
 });
-
 
 // Iniciar el servidor
 app.listen(PORT, () => {
