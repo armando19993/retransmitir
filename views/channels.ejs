@@ -137,15 +137,15 @@
               <input type="hidden" name="index" value="<%= index %>">
               <label>
                 Nombre:
-                <input type="text" name="name" value="<%= channel.name %>" required>
+                <input type="text" name="name" disabled value="<%= channel.name %>" required>
               </label>
               <label>
                 HLS URL:
-                <input type="text" name="hlsUrl" value="<%= channel.playlist_url %>" required>
+                <input type="text" name="playlist_url" disabled value="<%= channel.playlist_url %>" required>
               </label>
               <label>
                 RTMP URL:
-                <input type="text" name="rtmpUrl" value="<%= channel.rtmp_url %>">
+                <input type="text" name="rtmp_url" value="<%= channel.rtmp_url %>">
               </label>
               <button type="submit">Guardar</button>
             </form>
