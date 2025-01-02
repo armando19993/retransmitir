@@ -142,7 +142,7 @@ app.post("/channels/delete", async (req, res) => {
 
 
 app.post("/channels/edit", (req, res) => {
-  const { index, name, hlsUrl, rtmpUrl } = req.body;
+  const { index, name, url, rtmp_url } = req.body;
 
   fs.readFile(channelsFile, "utf-8", (err, data) => {
     if (err) {
