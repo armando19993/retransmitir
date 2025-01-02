@@ -6,20 +6,26 @@ const ffmpegProcesses = {};
 const broadcastManager = {
   // Inicia la transmisión para un canal
   startBroadcast: async function(channel) {
+    // Validar que tengamos tanto URL de origen como destino
+    if (!channel.playlist_url) {
+      console.log(`Error: URL de origen (playlist_url) no encontrada para el canal ${channel.name}`);
+      return;
+    }
+
     if (!channel.rtmp_url) {
-      console.log(`RTMP URL ausente para el canal ${channel.name}. Transmisión no iniciada.`);
+      console.log(`Error: URL de destino (rtmp_url) no encontrada para el canal ${channel.name}`);
       return;
     }
 
     // Verifica si ya hay un proceso activo para este canal y lo detiene
     if (ffmpegProcesses[channel.name]?.process) {
       console.log(`Transmisión activa detectada para ${channel.name}. Deteniendo la transmisión anterior.`);
-      await this.stopBroadcast(channel);  // Detener la transmisión anterior antes de iniciar una nueva
+      await this.stopBroadcast(channel);
     }
 
     console.log(`Iniciando transmisión para ${channel.name}`);
-    console.log(`HLS URL: ${channel.playlist_url}`);
-    console.log(`RTMP URL: ${channel.rtmp_url}`);
+    console.log(`Origen (HLS): ${channel.playlist_url}`);
+    console.log(`Destino (RTMP): ${channel.rtmp_url}`);
 
     try {
       const process = ffmpeg()
@@ -30,32 +36,38 @@ const broadcastManager = {
           '-reconnect_at_eof 1',
           '-reconnect_streamed 1',
           '-reconnect_delay_max 2',
-          '-fflags +genpts'     // Genera timestamps
+          '-fflags +genpts',    // Genera timestamps
+          '-ignore_loop 0'      // Ignora loops en el stream
         ])
         .outputOptions([
           '-c:v copy',          // Copia el video sin recodificar
           '-c:a aac',           // Codec de audio
           '-b:a 128k',          // Bitrate de audio
-          '-f flv'              // Formato de salida
+          '-f flv',             // Formato de salida
+          '-flvflags no_duration_filesize'  // Evita problemas con streams largos
         ])
         .output(channel.rtmp_url);
 
       // Manejadores de eventos
       process
-        .on('start', () => {
+        .on('start', (commandLine) => {
           console.log(`Transmisión iniciada para ${channel.name}`);
+          console.log('Comando FFmpeg:', commandLine);
           ffmpegProcesses[channel.name] = {
             process,
             status: 'running',
-            startTime: new Date()
+            startTime: new Date(),
+            command: commandLine
           };
         })
-        .on('error', (err) => {
+        .on('error', (err, stdout, stderr) => {
           console.error(`Error en la transmisión de ${channel.name}:`, err.message);
+          console.error('Error detallado:', stderr);
           ffmpegProcesses[channel.name] = {
             process: null,
             status: 'error',
-            lastError: err.message
+            lastError: err.message,
+            errorDetails: stderr
           };
         })
         .on('end', () => {
@@ -79,7 +91,7 @@ const broadcastManager = {
     }
   },
 
-  // Detiene la transmisión de un canal
+  // El resto del código permanece igual...
   stopBroadcast: async function(channel) {
     return new Promise((resolve) => {
       const channelProcess = ffmpegProcesses[channel.name];
@@ -99,33 +111,11 @@ const broadcastManager = {
     });
   },
 
-  // Detiene la transmisión de todos los canales
-  stopAllBroadcasts: async function(channels) {
-    console.log("Deteniendo transmisiones para todos los canales...");
-    for (const channel of channels) {
-      await this.stopBroadcast(channel);
-    }
-  },
-
-  // Inicia todas las transmisiones
-  startAllBroadcasts: async function(channels) {
-    console.log("Iniciando transmisiones para todos los canales...");
-    for (const channel of channels) {
-      await this.startBroadcast(channel);
-    }
-  },
-
-  // Obtiene el estado de un canal
   getStatus: function(channelName) {
     return ffmpegProcesses[channelName] || {
       process: null,
       status: 'stopped'
     };
-  },
-
-  // Obtiene el estado de todos los canales
-  getAllStatus: function() {
-    return ffmpegProcesses;
   }
 };
 
