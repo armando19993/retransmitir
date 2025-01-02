@@ -36,12 +36,12 @@ urls = [
     {
         'name': 'Teletica',
         'url': 'https://www.tdmax.com/player/channel/617c2f66e4b045a692106126?isFromTabLayout=true',
-        'rtmp_url': 'rtmp://fluestabiliz.giize.com/costaCANAL11',
+        'rtmp_url': None
     },
     {
         'name': 'Canal 6',
         'url': 'https://www.tdmax.com/player/channel/65d7aca4e4b0140cbf380bd0?isFromTabLayout=true',
-        'rtmp_url': None,
+        'rtmp_url': 'rtmp://fluestabiliz.giize.com/costaCANAL11',
     },
     {
         'name': 'FuTV',
