@@ -153,7 +153,7 @@ app.post("/channels/edit", async (req, res) => {
       channels[index] = {
         ...channels[index],
         name: name || channels[index].name,
-        rtmp_url: rtmp_url || channels[index].rtmp_url,
+        rtmp_url: rtmp_url ,
         lastUpdated: new Date().toISOString()
       };
 
