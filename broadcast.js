@@ -36,15 +36,13 @@ const broadcastManager = {
           '-reconnect_at_eof 1',
           '-reconnect_streamed 1',
           '-reconnect_delay_max 2',
-          '-fflags +genpts',    // Genera timestamps
-          '-ignore_loop 0'      // Ignora loops en el stream
+          '-fflags +genpts'     // Genera timestamps
         ])
         .outputOptions([
           '-c:v copy',          // Copia el video sin recodificar
           '-c:a aac',           // Codec de audio
           '-b:a 128k',          // Bitrate de audio
-          '-f flv',             // Formato de salida
-          '-flvflags no_duration_filesize'  // Evita problemas con streams largos
+          '-f flv'              // Formato de salida
         ])
         .output(channel.rtmp_url);
 
@@ -69,6 +67,12 @@ const broadcastManager = {
             lastError: err.message,
             errorDetails: stderr
           };
+          
+          // Intentar reiniciar la transmisión después de un error
+          setTimeout(() => {
+            console.log(`Intentando reiniciar la transmisión para ${channel.name}...`);
+            this.startBroadcast(channel);
+          }, 5000); // Espera 5 segundos antes de reintentar
         })
         .on('end', () => {
           console.log(`Transmisión finalizada para ${channel.name}`);
@@ -77,6 +81,12 @@ const broadcastManager = {
             status: 'stopped',
             endTime: new Date()
           };
+          
+          // Intentar reiniciar la transmisión si finaliza inesperadamente
+          setTimeout(() => {
+            console.log(`Reiniciando transmisión para ${channel.name}...`);
+            this.startBroadcast(channel);
+          }, 5000);
         });
 
       // Inicia la transmisión
@@ -91,7 +101,6 @@ const broadcastManager = {
     }
   },
 
-  // El resto del código permanece igual...
   stopBroadcast: async function(channel) {
     return new Promise((resolve) => {
       const channelProcess = ffmpegProcesses[channel.name];
