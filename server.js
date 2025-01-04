@@ -153,7 +153,7 @@ app.post("/channels/edit", async (req, res) => {
       channels[index] = {
         ...channels[index],
         name: name || channels[index].name,
-        rtmp_url: rtmp_url ,
+        rtmp_url: rtmp_url,
         lastUpdated: new Date().toISOString()
       };
 
@@ -221,6 +221,13 @@ app.post("/channels/startAll", async (req, res) => {
     res.status(500).send("Error al iniciar todas las transmisiones.");
   }
 });
+
+app.get('/channels/list', async (req, res) => {
+  const data = await fs.promises.readFile(channelsFile, "utf-8");
+  const channels = JSON.parse(data);
+
+  res.status(200).send(channels)
+})
 
 
 // Ruta para detener todas las transmisiones
