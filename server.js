@@ -7,6 +7,7 @@ const app = express();
 const PORT = 3000;
 const broadcastManager = require('./broadcast');
 
+app.use(cors());
 // Rutas de los archivos
 const channelsFile = path.join(__dirname, "channels.json");
 
@@ -223,11 +224,29 @@ app.post("/channels/startAll", async (req, res) => {
 });
 
 app.get('/channels/list', async (req, res) => {
-  const data = await fs.promises.readFile(channelsFile, "utf-8");
-  const channels = JSON.parse(data);
+  try {
+    // Verificar si el archivo existe
+    if (!fs.existsSync(channelsFile)) {
+      return res.status(404).json({
+        error: 'Channels file not found'
+      });
+    }
 
-  res.status(200).send(channels)
-})
+    // Leer y parsear el archivo
+    const data = await fs.promises.readFile(channelsFile, "utf-8");
+    const channels = JSON.parse(data);
+
+    // Enviar respuesta
+    res.status(200).json(channels);
+
+  } catch (error) {
+    console.error('Error reading channels:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error.message
+    });
+  }
+});
 
 
 // Ruta para detener todas las transmisiones
